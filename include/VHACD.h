@@ -793,17 +793,17 @@ protected:
     template <typename T>
     inline Vector3<T> Vector3<T>::CWiseMin(const Vector3<T>& rhs) const
     {
-        return Vector3<T>(std::min(GetX(), rhs.GetX()),
-                          std::min(GetY(), rhs.GetY()),
-                          std::min(GetZ(), rhs.GetZ()));
+        return Vector3<T>((std::min)(GetX(), rhs.GetX()),
+                          (std::min)(GetY(), rhs.GetY()),
+                          (std::min)(GetZ(), rhs.GetZ()));
     }
 
     template <typename T>
     inline Vector3<T> Vector3<T>::CWiseMax(const Vector3<T>& rhs) const
     {
-        return Vector3<T>(std::max(GetX(), rhs.GetX()),
-                          std::max(GetY(), rhs.GetY()),
-                          std::max(GetZ(), rhs.GetZ()));
+        return Vector3<T>((std::max)(GetX(), rhs.GetX()),
+                          (std::max)(GetY(), rhs.GetY()),
+                          (std::max)(GetZ(), rhs.GetZ()));
     }
 
     template <typename T>
@@ -2341,7 +2341,7 @@ void ConvexHull::BuildHull(const std::vector<::VHACD::Vertex>& vertexCloud,
                            int maxVertexCount)
 {
     size_t treeCount = vertexCloud.size() / (VHACD_CONVEXHULL_3D_VERTEX_CLUSTER_SIZE >> 1);
-    treeCount = std::max(treeCount, size_t(4)) * 2;
+    treeCount = (std::max)(treeCount, size_t(4)) * 2;
 
     std::vector<ConvexHullVertex> points(vertexCloud.size());
     /*
@@ -4625,7 +4625,7 @@ void AABBTree::BuildRecursive(uint32_t nodeIndex,
     // if we've run out of nodes allocate some more
     if (nodeIndex >= m_nodes.size())
     {
-        uint32_t s = std::max(uint32_t(double(1.5) * m_nodes.size()), 512U);
+        uint32_t s = (std::max)(uint32_t(double(1.5) * m_nodes.size()), 512U);
         m_nodes.resize(s);
     }
 
@@ -4634,7 +4634,7 @@ void AABBTree::BuildRecursive(uint32_t nodeIndex,
 
     // track max tree depth
     ++s_depth;
-    m_treeDepth = std::max(m_treeDepth, s_depth);
+    m_treeDepth = (std::max)(m_treeDepth, s_depth);
 
     n.m_extents = CalculateFaceBounds(faces,
                                       numFaces);
@@ -4992,8 +4992,8 @@ bool AxisTest(double  a, double  b, double fa, double fb,
     double p0 = a * v0 + b * v1;
     double p1 = a * v2 + b * v3;
 
-    double min = std::min(p0, p1);
-    double max = std::max(p0, p1);
+    double min = (std::min)(p0, p1);
+    double max = (std::max)(p0, p1);
 
     double rad = fa * boxHalfSize1 + fb * boxHalfSize2;
     if (min > rad || max < -rad)
@@ -5064,20 +5064,20 @@ bool TriBoxOverlap(const VHACD::Vect3& boxCenter,
     /*  the triangle against the AABB */
 
     /* test in 0-direction */
-    double min = std::min({v0.GetX(), v1.GetX(), v2.GetX()});
-    double max = std::max({v0.GetX(), v1.GetX(), v2.GetX()});
+    double min = (std::min)({v0.GetX(), v1.GetX(), v2.GetX()});
+    double max = (std::max)({v0.GetX(), v1.GetX(), v2.GetX()});
     if (min > boxHalfSize[0] || max < -boxHalfSize[0])
         return false;
 
     /* test in 1-direction */
-    min = std::min({v0.GetY(), v1.GetY(), v2.GetY()});
-    max = std::max({v0.GetY(), v1.GetY(), v2.GetY()});
+    min = (std::min)({v0.GetY(), v1.GetY(), v2.GetY()});
+    max = (std::max)({v0.GetY(), v1.GetY(), v2.GetY()});
     if (min > boxHalfSize[1] || max < -boxHalfSize[1])
         return false;
 
     /* test in getZ-direction */
-    min = std::min({v0.GetZ(), v1.GetZ(), v2.GetZ()});
-    max = std::max({v0.GetZ(), v1.GetZ(), v2.GetZ()});
+    min = (std::min)({v0.GetZ(), v1.GetZ(), v2.GetZ()});
+    max = (std::max)({v0.GetZ(), v1.GetZ(), v2.GetZ()});
     if (min > boxHalfSize[2] || max < -boxHalfSize[2])
         return false;
 
@@ -5099,7 +5099,7 @@ void Volume::Voxelize(const std::vector<VHACD::Vertex>& points,
 {
     double a = std::pow(dimensions, 0.33);
     size_t dim = a * double(1.5);
-    dim = std::max(dim, size_t(32));
+    dim = (std::max)(dim, size_t(32));
 
     if (points.size() == 0)
     {
@@ -5173,13 +5173,13 @@ void Volume::Voxelize(const std::vector<VHACD::Vertex>& points,
             }
             else
             {
-                i0 = std::min(i0, i);
-                j0 = std::min(j0, j);
-                k0 = std::min(k0, k);
+                i0 = (std::min)(i0, i);
+                j0 = (std::min)(j0, j);
+                k0 = (std::min)(k0, k);
 
-                i1 = std::max(i1, i);
-                j1 = std::max(j1, j);
-                k1 = std::max(k1, k);
+                i1 = (std::max)(i1, i);
+                j1 = (std::max)(j1, j);
+                k1 = (std::max)(k1, k);
             }
         }
         if (i0 > 0)

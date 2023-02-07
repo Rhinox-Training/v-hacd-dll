@@ -30,6 +30,11 @@ EXTERN void* CreateVHACD()
     return VHACD::CreateVHACD();
 }
 
+EXTERN void* CreateVHACD_ASYNC()
+{
+    return VHACD::CreateVHACD_ASYNC();
+}
+
 EXTERN void DestroyVHACD(void* pVHACD)
 {
     auto vhacd = (VHACD::IVHACD*)pVHACD;

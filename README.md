@@ -1,3 +1,7 @@
+# V-HACD-DLL
+
+V-HACD-DLL compiles into a dll for use in other applications.
+
 # The V-HACD library decomposes a 3D surface into a set of "near" convex parts.
 
 ![Approximate convex decomposition of "Camel"](doc/acd.png)

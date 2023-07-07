@@ -112,5 +112,5 @@ EXTERN uint32_t GetConvexHullTrianglesCount(
     const uint32_t index)
 {
     auto vhacd = (VHACD::IVHACD*)pVHACD;
-    return vhacd->GetConvexHullVerticesCount(index);
+    return vhacd->GetConvexHullTrianglesCount(index);
 }

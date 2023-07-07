@@ -1,30 +1,21 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
-using Unity.Collections;
 using UnityEngine;
-#if ODIN_INSPECTOR
-using Sirenix.Utilities;
-using Sirenix.OdinInspector;
-#endif
-using Rhinox.GUIUtils.Attributes;
-using Rhinox.GUIUtils;
 using Rhinox.Lightspeed;
 using Sirenix.OdinInspector;
-using UnityEditor;
 
-#if UNITY_EDITOR && ODIN_INSPECTOR
-using Sirenix.Utilities.Editor;
+#if UNITY_EDITOR
 using UnityEditor;
 #endif
 
 namespace MeshProcess
-{
+{ 
     public class VHACD : MonoBehaviour
     {
-        [ShowIf("@_generatedColliders != null && _generatedColliders.Count > 0"), ListDrawerSettings(IsReadOnly = true)]
+        private bool HasGeneratedColliders => !_generatedColliders.IsNullOrEmpty();
+        [ShowIf(nameof(HasGeneratedColliders)), ListDrawerSettings(IsReadOnly = true)]
         [InlineButton(nameof(ClearColliders), "Clear")]
         [SerializeField]
         private List<MeshCollider> _generatedColliders;
@@ -92,10 +83,24 @@ namespace MeshProcess
 
         };
 
+        unsafe struct Vertex
+        {
+            public double mx;
+            public double my;
+            public double mz;
+        }
+        
+        unsafe struct Triangle
+        {
+            public uint mI0;
+            public uint mI1;
+            public uint mI2;
+        }
+        
         unsafe struct ConvexHull
         {
-            public double* m_points; // array of vertices (which are 3 doubles)
-            public uint* m_triangles;
+            public Vertex* m_points; // array of vertices (which are 3 doubles)
+            public Triangle* m_triangles;
             public double m_volume;
             public int m_meshId;
             public fixed double m_center[3];
@@ -131,7 +136,7 @@ namespace MeshProcess
         static extern unsafe uint GetNConvexHulls(void* pVHACD);
 
         [DllImport("libvhacd")]
-        static extern unsafe void GetConvexHull(
+        static extern unsafe bool GetConvexHull(
             void* pVHACD,
             uint index,
             ConvexHull* ch);
@@ -193,14 +198,12 @@ namespace MeshProcess
             for (uint index = 0; index < numHulls; ++index)
             {
                 ConvexHull hull;
-                GetConvexHull(vhacd, index, &hull);
+                if (!GetConvexHull(vhacd, index, &hull))
+                    continue;
 
                 uint nVertices = GetConvexHullVerticesCount(vhacd, index);
                 uint nTriangles = GetConvexHullTrianglesCount(vhacd, index);
 
-                Debug.Log(nVertices);
-                Debug.Log(nTriangles);
-                
                 var hullMesh = new Mesh();
                 var hullVerts = new Vector3[nVertices];
                 var pComponents = hull.m_points;
@@ -208,18 +211,27 @@ namespace MeshProcess
                 for (int i = 0; i < hullVerts.Length; ++i)
                 {
                     hullVerts[i] = new Vector3(
-                        (float)pComponents[0],
-                        (float)pComponents[1],
-                        (float)pComponents[2]
+                        (float) pComponents[0].mx,
+                        (float) pComponents[0].my,
+                        (float) pComponents[0].mz
                         );
                     
-                    pComponents += 3;
+                    pComponents += 1;
                 }
 
                 hullMesh.SetVertices(hullVerts);
                 
                 var indices = new int[nTriangles * 3];
-                Marshal.Copy((IntPtr) hull.m_triangles, indices, 0, indices.Length);
+
+                for (int i = 0; i < nTriangles; ++i)
+                {
+                    var triangle = hull.m_triangles[i];
+                    Debug.Log($"Tri: {triangle.mI0}; {triangle.mI1}; {triangle.mI2}");
+                    indices[i*3+0] = (int) triangle.mI0;
+                    indices[i*3+1] = (int) triangle.mI1;
+                    indices[i*3+2] = (int) triangle.mI2;
+                }
+                
                 hullMesh.SetTriangles(indices, 0);
 
 

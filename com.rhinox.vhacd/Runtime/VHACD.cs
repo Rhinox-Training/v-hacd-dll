@@ -83,24 +83,10 @@ namespace MeshProcess
 
         };
 
-        unsafe struct Vertex
-        {
-            public double mx;
-            public double my;
-            public double mz;
-        }
-        
-        unsafe struct Triangle
-        {
-            public uint mI0;
-            public uint mI1;
-            public uint mI2;
-        }
-        
         unsafe struct ConvexHull
         {
-            public Vertex* m_points; // array of vertices (which are 3 doubles)
-            public Triangle* m_triangles;
+            public double* m_points;
+            public uint* m_triangles;
             public double m_volume;
             public int m_meshId;
             public fixed double m_center[3];
@@ -142,14 +128,16 @@ namespace MeshProcess
             ConvexHull* ch);
 
         [DllImport("libvhacd")]
-        static extern unsafe uint GetConvexHullVerticesCount(
+        static extern unsafe uint GetConvexHullVertices(
             void* pVHACD,
-            uint index);
+            uint index,
+            out double* data);
 
         [DllImport("libvhacd")]
-        static extern unsafe uint GetConvexHullTrianglesCount(
+        static extern unsafe uint GetConvexHullTriangles(
             void* pVHACD,
-            uint index);
+            uint index,
+            out uint* data);
 
         public Parameters m_parameters;
 
@@ -197,41 +185,53 @@ namespace MeshProcess
             List<Mesh> convexMesh = new List<Mesh>(numHulls);
             for (uint index = 0; index < numHulls; ++index)
             {
-                ConvexHull hull;
-                if (!GetConvexHull(vhacd, index, &hull))
-                    continue;
+                double* vertices;
+                uint* triangles;
 
-                uint nVertices = GetConvexHullVerticesCount(vhacd, index);
-                uint nTriangles = GetConvexHullTrianglesCount(vhacd, index);
-
+                uint nVertices = GetConvexHullVertices(vhacd, index, out vertices);
+                uint nTriangles = GetConvexHullTriangles(vhacd, index, out triangles);
+                
                 var hullMesh = new Mesh();
                 var hullVerts = new Vector3[nVertices];
-                var pComponents = hull.m_points;
 
-                for (int i = 0; i < hullVerts.Length; ++i)
+                fixed (Vector3* pHullVerts = hullVerts)
                 {
-                    hullVerts[i] = new Vector3(
-                        (float) pComponents[0].mx,
-                        (float) pComponents[0].my,
-                        (float) pComponents[0].mz
-                        );
+                    var pComponents = vertices;
+                    var pVerts = pHullVerts;
                     
-                    pComponents += 1;
+                    for (var pointCount = nVertices; pointCount != 0; --pointCount)
+                    {
+                        pVerts->x = (float) pComponents[0];
+                        pVerts->y = (float) pComponents[1];
+                        pVerts->z = (float) pComponents[2];
+                    
+                        pComponents += 3;
+                        pVerts += 1;
+                    }
                 }
+
+                
 
                 hullMesh.SetVertices(hullVerts);
                 
                 var indices = new int[nTriangles * 3];
+                var pTriangles = triangles;
 
-                for (int i = 0; i < nTriangles; ++i)
+                fixed (int* pHullIndices = indices)
                 {
-                    var triangle = hull.m_triangles[i];
-                    Debug.Log($"Tri: {triangle.mI0}; {triangle.mI1}; {triangle.mI2}");
-                    indices[i*3+0] = (int) triangle.mI0;
-                    indices[i*3+1] = (int) triangle.mI1;
-                    indices[i*3+2] = (int) triangle.mI2;
+                    var pIndices = pHullIndices;
+
+                    for (var i = nTriangles; i != 0; --i)
+                    {
+                        pIndices[0] = (int)pTriangles[0];
+                        pIndices[1] = (int)pTriangles[1];
+                        pIndices[2] = (int)pTriangles[2];
+
+                        pTriangles += 3;
+                        pIndices += 3;
+                    }
                 }
-                
+
                 hullMesh.SetTriangles(indices, 0);
 
 

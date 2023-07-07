@@ -99,30 +99,38 @@ EXTERN bool GetConvexHull(
     return vhacd->GetConvexHull(index, *(VHACD::IVHACD::ConvexHull*)ch);
 }
 
-EXTERN uint32_t GetConvexHullVerticesCount(
+EXTERN uint32_t GetConvexHullVertices(
     void* pVHACD,
-    const uint32_t index)
+    const uint32_t index,
+    VHACD::Vertex** data)
 {
     auto vhacd = (VHACD::IVHACD*)pVHACD;
-    VHACD::IVHACD::ConvexHull* ch = NULL;
-    bool found = vhacd->GetConvexHull(index, *ch);
+    VHACD::IVHACD::ConvexHull ch;
+    bool found = vhacd->GetConvexHull(index, ch);
 
     if (found)
-        return ch->m_points.size();
+    {
+        *data = ch.m_points.data();
+        return (uint32_t) ch.m_points.size();
+    }
     
     return 0;
 }
 
-EXTERN uint32_t GetConvexHullTrianglesCount(
+EXTERN uint32_t GetConvexHullTriangles(
     void* pVHACD,
-    const uint32_t index)
+    const uint32_t index,
+    VHACD::Triangle** data)
 {
     auto vhacd = (VHACD::IVHACD*)pVHACD;
-    VHACD::IVHACD::ConvexHull* ch = NULL;
-    bool found = vhacd->GetConvexHull(index, *ch);
+    VHACD::IVHACD::ConvexHull ch;
+    bool found = vhacd->GetConvexHull(index, ch);
 
     if (found)
-        return ch->m_triangles.size();
+    {
+        *data = ch.m_triangles.data();
+        return (uint32_t) ch.m_triangles.size();
+    }
     
     return 0;
 }

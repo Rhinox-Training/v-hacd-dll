@@ -98,3 +98,19 @@ EXTERN bool GetConvexHull(
     auto vhacd = (VHACD::IVHACD*)pVHACD;
     return vhacd->GetConvexHull(index, *(VHACD::IVHACD::ConvexHull*)ch);
 }
+
+EXTERN uint32_t GetConvexHullVerticesCount(
+    void* pVHACD,
+    const uint32_t index)
+{
+    auto vhacd = (VHACD::IVHACD*)pVHACD;
+    return vhacd->GetConvexHullVerticesCount(index);
+}
+
+EXTERN uint32_t GetConvexHullTrianglesCount(
+    void* pVHACD,
+    const uint32_t index)
+{
+    auto vhacd = (VHACD::IVHACD*)pVHACD;
+    return vhacd->GetConvexHullVerticesCount(index);
+}

@@ -451,6 +451,22 @@ public:
                                ConvexHull& ch) const = 0;
 
     /**
+    * Retrieves the amount of vertices one of the convex hulls in the solution set has
+    * 
+    * @param index : Which convex hull to retrieve
+    * @return : Returns the amount of vertices of the hull; 0 if not found
+    */
+    virtual uint32_t GetConvexHullVerticesCount(const uint32_t index) const = 0;
+    
+    /**
+    * Retrieves the amount of triangles one of the convex hulls in the solution set has
+    * 
+    * @param index : Which convex hull to retrieve
+    * @return : Returns the amount of triangles of the hull; 0 if not found
+    */
+    virtual uint32_t GetConvexHullTrianglesCount(const uint32_t index) const = 0;
+
+    /**
     * Releases any memory allocated by the V-HACD class
     */
     virtual void Clean() = 0; // release internally allocated memory
@@ -6805,6 +6821,9 @@ public:
     bool GetConvexHull(const uint32_t index,
                        ConvexHull& ch) const override final;
 
+    uint32_t GetConvexHullVerticesCount(const uint32_t index) const override final;
+    uint32_t GetConvexHullTrianglesCount(const uint32_t index) const override final;
+
     void Clean() override final;  // release internally allocated memory
 
     void Release() override final;
@@ -7011,8 +7030,24 @@ bool VHACDImpl::GetConvexHull(const uint32_t index,
         ch = *m_convexHulls[index];
         ret = true;
     }
-
+    
     return ret;
+}
+    
+uint32_t VHACDImpl::GetConvexHullVerticesCount(const uint32_t index) const
+{
+    if ( index < uint32_t(m_convexHulls.size() ))
+        return m_convexHulls[index]->m_points.size();
+
+    return 0;
+}
+
+uint32_t VHACDImpl::GetConvexHullTrianglesCount(const uint32_t index) const
+{
+    if ( index < uint32_t(m_convexHulls.size() ))
+        return m_convexHulls[index]->m_triangles.size();
+
+    return 0;
 }
 
 void VHACDImpl::Clean()
@@ -8022,6 +8057,10 @@ public:
     bool GetConvexHull(const uint32_t index,
                        VHACD::IVHACD::ConvexHull& ch) const override final;
 
+    uint32_t GetConvexHullVerticesCount(const uint32_t index) const override final;
+    
+    uint32_t GetConvexHullTrianglesCount(const uint32_t index) const override final;
+
     uint32_t GetNConvexHulls() const override final;
 
     void Clean() override final; // release internally allocated memory
@@ -8167,6 +8206,16 @@ bool VHACDAsyncImpl::GetConvexHull(const uint32_t index,
                                  ch);
 }
 
+uint32_t VHACDAsyncImpl::GetConvexHullVerticesCount(const uint32_t index) const
+{
+    return m_VHACD.GetConvexHullVerticesCount(index);
+}
+
+uint32_t VHACDAsyncImpl::GetConvexHullTrianglesCount(const uint32_t index) const
+{
+    return m_VHACD.GetConvexHullTrianglesCount(index);
+}
+    
 uint32_t VHACDAsyncImpl::GetNConvexHulls() const
 {
     ProcessPendingMessages();

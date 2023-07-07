@@ -104,7 +104,13 @@ EXTERN uint32_t GetConvexHullVerticesCount(
     const uint32_t index)
 {
     auto vhacd = (VHACD::IVHACD*)pVHACD;
-    return vhacd->GetConvexHullVerticesCount(index);
+    VHACD::IVHACD::ConvexHull* ch = NULL;
+    bool found = vhacd->GetConvexHull(index, *ch);
+
+    if (found)
+        return ch->m_points.size();
+    
+    return 0;
 }
 
 EXTERN uint32_t GetConvexHullTrianglesCount(
@@ -112,5 +118,11 @@ EXTERN uint32_t GetConvexHullTrianglesCount(
     const uint32_t index)
 {
     auto vhacd = (VHACD::IVHACD*)pVHACD;
-    return vhacd->GetConvexHullTrianglesCount(index);
+    VHACD::IVHACD::ConvexHull* ch = NULL;
+    bool found = vhacd->GetConvexHull(index, *ch);
+
+    if (found)
+        return ch->m_triangles.size();
+    
+    return 0;
 }

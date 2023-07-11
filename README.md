@@ -1,5 +1,8 @@
 # V-HACD-DLL
 
+[![openupm](https://img.shields.io/npm/v/com.rhinox.open.vhacd?label=openupm&registry_uri=https://package.openupm.com)](https://openupm.com/packages/com.rhinox.open.vhacd/)
+
+
 V-HACD-DLL compiles into a dll for use in other applications.
 
 # The V-HACD library decomposes a 3D surface into a set of "near" convex parts.

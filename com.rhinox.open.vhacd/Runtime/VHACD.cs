@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
+using Microsoft.Win32.SafeHandles;
+using Rhinox.GUIUtils.Attributes;
 using UnityEngine;
 using Rhinox.Lightspeed;
 using Sirenix.OdinInspector;
@@ -12,8 +14,16 @@ using UnityEditor;
 
 namespace MeshProcess
 { 
+    [SmartFallbackDrawn()]
     public class VHACD : MonoBehaviour
     {
+
+        public class SafeHandle : SafeHandleZeroOrMinusOneIsInvalid
+        {
+            public SafeHandle() : base(true) { }
+            protected override bool ReleaseHandle() => true;
+        }
+        
         private bool HasGeneratedColliders => !_generatedColliders.IsNullOrEmpty();
         [ShowIf(nameof(HasGeneratedColliders)), ListDrawerSettings(IsReadOnly = true)]
         [InlineButton(nameof(ClearColliders), "Clear")]
@@ -28,9 +38,9 @@ namespace MeshProcess
         {
             public void Init()
             {
-                m_callback = null;
-                m_logger = null;
-                m_taskRunner = null;
+                m_callback = IntPtr.Zero;
+                m_logger = IntPtr.Zero;
+                m_taskRunner = IntPtr.Zero;
                 m_maxConvexHulls = 64;
                 m_resolution = 400000;
                 m_minimumVolumePercentErrorAllowed = 1;
@@ -43,9 +53,9 @@ namespace MeshProcess
                 m_findBestPlane = false;
             }
             
-            public void* m_callback; // Optional user provided callback interface for progress
-            public void* m_logger; // Optional user provided callback interface for log messages
-            public void* m_taskRunner; // Optional user provided interface for creating tasks
+            public IntPtr m_callback; // Optional user provided callback interface for progress
+            public IntPtr m_logger; // Optional user provided callback interface for log messages
+            public IntPtr m_taskRunner; // Optional user provided interface for creating tasks
 
             [Tooltip("The maximum number of convex hulls to produce")]
             public uint m_maxConvexHulls;
@@ -83,13 +93,28 @@ namespace MeshProcess
 
         };
 
+        unsafe struct Vertex
+        {
+            public double mX;
+            public double mY;
+            public double mZ;
+        }
+
+        unsafe struct Triangle
+        {
+            public uint mI0;
+            public uint mI1;
+            public uint mI2;
+        }
+
         unsafe struct ConvexHull
         {
             public double* m_points;
             public uint* m_triangles;
+            
             public double m_volume;
-            public int m_meshId;
             public fixed double m_center[3];
+            public int m_meshId;
             public fixed double mBmin[3];
             public fixed double mBmax[3];
         };
@@ -127,16 +152,18 @@ namespace MeshProcess
             uint index,
             ConvexHull* ch);
 
-        [DllImport("libvhacd")]
+        [DllImport("libvhacd", CallingConvention = CallingConvention.Cdecl)]
         static extern unsafe uint GetConvexHullVertices(
             void* pVHACD,
             uint index,
+            out SafeHandle hData,
             out double* data);
 
-        [DllImport("libvhacd")]
+        [DllImport("libvhacd", CallingConvention = CallingConvention.Cdecl)]
         static extern unsafe uint GetConvexHullTriangles(
             void* pVHACD,
             uint index,
+            out SafeHandle hData,
             out uint* data);
 
         public Parameters m_parameters;
@@ -188,8 +215,9 @@ namespace MeshProcess
                 double* vertices;
                 uint* triangles;
 
-                uint nVertices = GetConvexHullVertices(vhacd, index, out vertices);
-                uint nTriangles = GetConvexHullTriangles(vhacd, index, out triangles);
+                uint nVertices = GetConvexHullVertices(vhacd, index, out var hVertices, out vertices);
+                // TODO: triangles are still fucked sometimes, why?
+                uint nTriangles = GetConvexHullTriangles(vhacd, index, out var hIndices, out triangles);
                 
                 var hullMesh = new Mesh();
                 var hullVerts = new Vector3[nVertices];
@@ -199,7 +227,7 @@ namespace MeshProcess
                     var pComponents = vertices;
                     var pVerts = pHullVerts;
                     
-                    for (var pointCount = nVertices; pointCount != 0; --pointCount)
+                    for (var pointCount = nVertices; pointCount > 0; --pointCount)
                     {
                         pVerts->x = (float) pComponents[0];
                         pVerts->y = (float) pComponents[1];
@@ -210,12 +238,13 @@ namespace MeshProcess
                     }
                 }
 
-                
+                Debug.Log($"({nVertices}); {string.Join(";", hullVerts)}");
 
                 hullMesh.SetVertices(hullVerts);
                 
-                var indices = new int[nTriangles * 3];
+                var indices = new int[nTriangles];
                 var pTriangles = triangles;
+                
 
                 fixed (int* pHullIndices = indices)
                 {
@@ -223,14 +252,17 @@ namespace MeshProcess
 
                     for (var i = nTriangles; i != 0; --i)
                     {
-                        pIndices[0] = (int)pTriangles[0];
-                        pIndices[1] = (int)pTriangles[1];
-                        pIndices[2] = (int)pTriangles[2];
+                        pIndices[0] = (int) pTriangles[0];
+                        // pIndices[1] = (int) pTriangles[1];
+                        // pIndices[2] = (int) pTriangles[2];
 
-                        pTriangles += 3;
-                        pIndices += 3;
+                        pTriangles += 1;
+                        pIndices += 1;
                     }
                 }
+                
+                Debug.Log($"({nTriangles}); {string.Join(";", indices)}");
+
 
                 hullMesh.SetTriangles(indices, 0);
 
@@ -316,6 +348,7 @@ namespace MeshProcess
 
 #if UNITY_EDITOR
         [ContextMenu("Generate VHACD")]
+        [Button("Generate Colliders")]
         private unsafe void GenerateVHACDCollision()
         {
             var meshFilters = GetComponentsInChildren<MeshFilter>(true);
@@ -378,5 +411,10 @@ namespace MeshProcess
             }
         }
 #endif
+
+        public void Log(string msg)
+        {
+            Debug.Log(msg);
+        }
     }
 }

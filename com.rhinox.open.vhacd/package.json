@@ -1,11 +1,12 @@
 {
   "name": "com.rhinox.open.vhacd",
-  "version": "0.4.1",
+  "version": "4.1.1",
   "displayName": "VHACD",
   "description": "Mesh decomposition algorithm forked from V-HACD",
   "unity": "2020.3",
   "author": "Rhinox",
   "dependencies": {
-		"com.rhinox.open.lightspeed": "1.6.4"
+		"com.rhinox.open.lightspeed": "1.6.4",
+		"com.rhinox.open.guiutils": "2.11.3"
   }
 }

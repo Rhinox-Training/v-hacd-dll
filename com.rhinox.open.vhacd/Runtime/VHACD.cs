@@ -25,9 +25,8 @@ namespace MeshProcess
         }
         
         private bool HasGeneratedColliders => !_generatedColliders.IsNullOrEmpty();
-        [ShowIf(nameof(HasGeneratedColliders)), ListDrawerSettings(IsReadOnly = true)]
-        [InlineButton(nameof(ClearColliders), "Clear")]
-        [SerializeField]
+        [ShowIf(nameof(HasGeneratedColliders)), ListDrawerSettings(IsReadOnly = true, NumberOfItemsPerPage = 10, Expanded = false)]
+        [SerializeField, PropertyOrder(10)]
         private List<MeshCollider> _generatedColliders;
         
         public IList<MeshCollider> GeneratedColliders => _generatedColliders ?? (IList<MeshCollider>)Array.Empty<MeshCollider>();
@@ -38,9 +37,9 @@ namespace MeshProcess
         {
             public void Init()
             {
-                m_callback = IntPtr.Zero;
-                m_logger = IntPtr.Zero;
-                m_taskRunner = IntPtr.Zero;
+                m_callback = null;
+                m_logger = null;
+                m_taskRunner = null;
                 m_maxConvexHulls = 64;
                 m_resolution = 400000;
                 m_minimumVolumePercentErrorAllowed = 1;
@@ -53,9 +52,9 @@ namespace MeshProcess
                 m_findBestPlane = false;
             }
             
-            public IntPtr m_callback; // Optional user provided callback interface for progress
-            public IntPtr m_logger; // Optional user provided callback interface for log messages
-            public IntPtr m_taskRunner; // Optional user provided interface for creating tasks
+            public void* m_callback; // Optional user provided callback interface for progress
+            public void* m_logger; // Optional user provided callback interface for log messages
+            public void* m_taskRunner; // Optional user provided interface for creating tasks
 
             [Tooltip("The maximum number of convex hulls to produce")]
             public uint m_maxConvexHulls;
@@ -194,6 +193,8 @@ namespace MeshProcess
         }
 
         [ContextMenu("Clear Generated Colliders")]
+        [ShowIf(nameof(HasGeneratedColliders))]
+        [Button, PropertyOrder(11)]
         private void ClearColliders()
         {
             if (!_generatedColliders.IsNullOrEmpty())
@@ -238,7 +239,7 @@ namespace MeshProcess
                     }
                 }
 
-                Debug.Log($"({nVertices}); {string.Join(";", hullVerts)}");
+                // Debug.Log($"({nVertices}); {string.Join(";", hullVerts)}");
 
                 hullMesh.SetVertices(hullVerts);
                 
@@ -261,9 +262,8 @@ namespace MeshProcess
                     }
                 }
                 
-                Debug.Log($"({nTriangles}); {string.Join(";", indices)}");
-
-
+                // Debug.Log($"({nTriangles}); {string.Join(";", indices)}");
+                
                 hullMesh.SetTriangles(indices, 0);
 
 
@@ -411,10 +411,5 @@ namespace MeshProcess
             }
         }
 #endif
-
-        public void Log(string msg)
-        {
-            Debug.Log(msg);
-        }
     }
 }

@@ -7,6 +7,6 @@
   "author": "Rhinox",
   "dependencies": {
 		"com.rhinox.open.lightspeed": "1.6.4",
-		"com.rhinox.open.guiutils": "2.11.2"
+		"com.rhinox.open.guiutils": "2.11.3"
   }
 }

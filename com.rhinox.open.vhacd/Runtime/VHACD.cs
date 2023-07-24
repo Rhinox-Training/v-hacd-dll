@@ -286,7 +286,11 @@ namespace MeshProcess
             foreach (var meshFilter in meshFilters)
             {
                 var mesh = meshFilter.sharedMesh;
+#if UNITY_EDITOR
+                if (mesh)
+#else
                 if (mesh && mesh.isReadable)
+#endif
                 {
                     if (mesh.bounds.size.x > 0.0f && mesh.bounds.size.y > 0.0f && mesh.bounds.size.z > 0.0f)
                     {                        
